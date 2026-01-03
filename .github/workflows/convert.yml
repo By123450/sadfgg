@@ -6,20 +6,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install woff2 tools
-        run: sudo apt-get update && sudo apt-get install -y woff2
-
-      - name: Convert font
+      - name: Show repo structure
         run: |
-          woff2_compress NotoColorEmoji.ttf
-          ls -l
+          echo "Listing all files:"
+          find .
+
+      - name: Install woff2 tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y woff2
+
+      - name: Find and convert font
+        run: |
+          FONT=$(find . -maxdepth 2 -name "NotoColorEmoji.ttf" | head -n 1)
+          if [ -z "$FONT" ]; then
+            echo "ERROR: Could not find NotoColorEmoji.ttf"
+            exit 1
+          fi
+          echo "Found font at: $FONT"
+          woff2_compress "$FONT"
+          echo "Conversion complete."
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: emoji-font
-          path: NotoColorEmoji.woff2
+          name: converted-font
+          path: |
+            **/*.woff2
